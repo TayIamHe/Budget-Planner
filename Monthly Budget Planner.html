@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<!-- saved from url=(0128)file:///C:/Users/deaon/Documents/Codex/2026-07-14/im-building-an-html-budgetting-app/Monthly%20Budget%20Planner%20-%20Saved.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monthly Budget Planner</title>
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --surface2: #f8f9fb;
+    --border: #dde1e9;
+    --border-strong: #b8bfcc;
+    --accent: #1a56db;
+    --accent-dark: #1341b0;
+    --accent-light: #e8eefb;
+    --green: #0f7040;
+    --green-bg: #e6f4ed;
+    --red: #b91c1c;
+    --red-bg: #fef2f2;
+    --yellow: #92400e;
+    --yellow-bg: #fffbeb;
+    --text: #111827;
+    --text2: #4b5563;
+    --text3: #9ca3af;
+    --tab-h: 44px;
+    --radius: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+    --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  #app-header {
+    background: var(--accent);
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 56px;
+    box-shadow: 0 2px 8px rgba(26,86,219,.3);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  #app-header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -.3px;
+    flex: 1;
+  }
+  .year-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,.15);
+    border-radius: var(--radius);
+    padding: 4px 10px;
+  }
+  .year-ctrl span { font-weight: 700; font-size: 15px; min-width: 38px; text-align: center; }
+  .year-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 4px;
+    opacity: .85;
+    transition: opacity .15s;
+  }
+  .year-btn:hover { opacity: 1; background: rgba(255,255,255,.2); }
+
+  /* ── MONTH TABS ── */
+  #tab-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    padding: 0 16px;
+    gap: 2px;
+    scrollbar-width: none;
+    position: sticky;
+    top: 56px;
+    z-index: 99;
+    box-shadow: var(--shadow);
+  }
+  #tab-bar::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    height: var(--tab-h);
+    padding: 0 14px;
+    border: none;
+    background: none;
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color .15s, border-color .15s;
+    flex-shrink: 0;
+  }
+  .tab-btn:hover { color: var(--accent); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+  }
+  #new-month-btn {
+    margin-left: auto;
+    height: 30px;
+    padding: 0 12px;
+    border: 1px solid var(--accent);
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background .15s;
+  }
+  #new-month-btn:hover { background: var(--accent); color: #fff; }
+
+  /* ── PAGE LAYOUT ── */
+  #page {
+    max-width: 1260px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  /* ── SUMMARY STRIP ── */
+  #summary-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .sum-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .sum-card .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--text3); margin-bottom: 4px; }
+  .sum-card .value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .sum-card.income .value { color: var(--green); }
+  .sum-card.expenses .value { color: var(--red); }
+  .sum-card.remaining .value { }
+  .sum-card.savings .value { color: var(--accent); }
+  .remaining-positive { color: var(--green) !important; }
+  .remaining-negative { color: var(--red) !important; }
+
+  /* ── GRID ── */
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 860px) { #grid { grid-template-columns: 1fr; } #summary-strip { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 520px) { #summary-strip { grid-template-columns: 1fr; } }
+
+  /* ── SECTION CARD ── */
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .section-card.full-width { grid-column: 1 / -1; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+  .section-header .s-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--text2);
+    flex: 1;
+  }
+  .section-total {
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .section-body { padding: 8px 0; }
+
+  /* ── ROW ── */
+  .budget-row {
+    display: flex;
+    align-items: center;
+    padding: 3px 14px;
+    gap: 6px;
+  }
+  .budget-row:hover { background: var(--surface2); }
+  .row-label {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    padding: 3px 4px;
+    border-radius: 3px;
+    outline: none;
+    min-width: 0;
+  }
+  .row-label:focus { background: var(--accent-light); }
+  .row-amount {
+    width: 110px;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    padding: 3px 6px;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color .1s, background .1s;
+  }
+  .row-amount:focus { border-color: var(--accent); background: var(--accent-light); }
+  .row-amount::placeholder { color: var(--text3); }
+  .del-btn {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border: none;
+    background: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color .1s, background .1s;
+  }
+  .del-btn:hover { color: var(--red); background: var(--red-bg); }
+
+  .add-row-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 4px 14px 2px;
+    padding: 4px 8px;
+    border: 1px dashed var(--border-strong);
+    background: none;
+    color: var(--text3);
+    border-radius: var(--radius);
+    font-size: 12px;
+    cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+    width: calc(100% - 28px);
+  }
+  .add-row-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
+
+  /* ── INCOME special ── */
+  .income-total-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+    background: var(--green-bg);
+  }
+  .income-total-row span:first-child { flex:1; font-size:13px; font-weight:600; color: var(--green); }
+  .income-total-row .itotal { font-size:14px; font-weight:700; color: var(--green); font-variant-numeric:tabular-nums; }
+
+  /* ── BILLS ── */
+  .bills-form {
+    display: grid;
+    grid-template-columns: 1fr 160px 120px auto;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .bills-form input, .bills-form select {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 8px;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color .1s;
+  }
+  .bills-form input:focus, .bills-form select:focus { border-color: var(--accent); }
+  .bills-add-btn {
+    padding: 6px 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  .bills-add-btn:hover { background: var(--accent-dark); }
+
+  #bills-list-head {
+    display: grid;
+    grid-template-columns: 1fr 160px 110px 24px;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--text3);
+  }
+  .bill-row {
+    display: grid;
+    grid-template-columns: 1fr 160px 110px 24px;
+    gap: 6px;
+    padding: 5px 14px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .bill-row:hover { background: var(--surface2); }
+  .bill-row:last-child { border-bottom: none; }
+  .bill-cat-badge {
+    display: inline-block;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 99px;
+  }
+  .bill-amount { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .bills-total-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 14px;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    margin-top: 0;
+  }
+  .bills-total-row span:first-child { flex:1; font-weight:700; font-size:13px; }
+  .bills-total-row .btotal { font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; color: var(--text); }
+
+  /* ── DIVIDER LABEL ── */
+  .section-divider {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0 4px;
+    color: var(--text3);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+  }
+  .section-divider::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  /* ── EMPTY STATE ── */
+  .empty-bills {
+    padding: 20px 14px;
+    text-align: center;
+    color: var(--text3);
+    font-size: 13px;
+  }
+
+  /* ── SCROLLABLE BILLS ── */
+  #bills-scroll { max-height: 300px; overflow-y: auto; }
+
+  /* section icon colors */
+  .ic-income { background:#dcfce7; color:#16a34a; }
+  .ic-savings { background:#dbeafe; color:#2563eb; }
+  .ic-housing { background:#fef3c7; color:#d97706; }
+  .ic-utilities { background:#f3e8ff; color:#7c3aed; }
+  .ic-food { background:#fce7f3; color:#be185d; }
+  .ic-transport { background:#e0f2fe; color:#0369a1; }
+  .ic-wellness { background:#dcfce7; color:#15803d; }
+  .ic-personal { background:#fef9c3; color:#a16207; }
+  .ic-insurance { background:#ffe4e6; color:#e11d48; }
+  .ic-family { background:#ffedd5; color:#ea580c; }
+  .ic-home { background:#f0fdf4; color:#166534; }
+  .ic-subscriptions { background:#f0e6ff; color:#6d28d9; }
+  .ic-loans { background:#fee2e2; color:#b91c1c; }
+  .ic-other { background:#f3f4f6; color:#4b5563; }
+  .ic-bills { background:#fef3c7; color:#b45309; }
+</style>
+</head>
+<body>
+
+<header id="app-header">
+  <h1>💰 Budget Planner</h1>
+  <div class="year-ctrl">
+    <button class="year-btn" id="yr-prev" title="Previous year">‹</button>
+    <span id="yr-display">2026</span>
+    <button class="year-btn" id="yr-next" title="Next year">›</button>
+  </div>
+</header>
+
+<div id="tab-bar">
+  <button class="tab-btn" data-month="0">Jan</button>
+  <button class="tab-btn" data-month="1">Feb</button>
+  <button class="tab-btn" data-month="2">Mar</button>
+  <button class="tab-btn" data-month="3">Apr</button>
+  <button class="tab-btn" data-month="4">May</button>
+  <button class="tab-btn" data-month="5">Jun</button>
+  <button class="tab-btn active" data-month="6">Jul</button>
+  <button class="tab-btn" data-month="7">Aug</button>
+  <button class="tab-btn" data-month="8">Sep</button>
+  <button class="tab-btn" data-month="9">Oct</button>
+  <button class="tab-btn" data-month="10">Nov</button>
+  <button class="tab-btn" data-month="11">Dec</button>
+  <button id="new-month-btn">+ Reset Month</button>
+</div><div id="save-tools"><span>✓ Auto-saved locally</span><button id="manual-save">Save now</button><button id="export-data">Export data</button><button id="import-data">Import data</button><input id="import-file" type="file" accept="application/json" hidden=""></div>
+
+<div id="page">
+  <!-- Summary strip -->
+  <div id="summary-strip">
+    <div class="sum-card income">
+      <div class="label">Total Income</div>
+      <div class="value" id="s-income">$13,300.32</div>
+    </div>
+    <div class="sum-card expenses">
+      <div class="label">Total Expenses</div>
+      <div class="value" id="s-expenses">$13,300.32</div>
+    </div>
+    <div class="sum-card remaining">
+      <div class="label">Remaining Balance</div>
+      <div class="value remaining-positive" id="s-remaining">$0.00</div>
+    </div>
+    <div class="sum-card savings">
+      <div class="label">Savings Rate</div>
+      <div class="value" id="s-rate">7.9%</div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div id="grid"><div class="section-card full-width"><div class="section-header">
+    <div class="s-icon ic-income">💵</div>
+    <h2>Income</h2>
+    <span class="section-total" id="tot-income">$13,300.32</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time">One-Time</option><option value="weekly" selected="">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button><div class="income-total-row"><span>Total Monthly Income</span><span class="itotal">$13,300.32</span></div></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-savings">🏦</div>
+    <h2>Savings</h2>
+    <span class="section-total">$1,050.00</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-housing">🏠</div>
+    <h2>Housing</h2>
+    <span class="section-total">$3,132.00</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly" selected="">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-utilities">⚡</div>
+    <h2>Utilities</h2>
+    <span class="section-total">$244.94</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-food">🍽️</div>
+    <h2>Food</h2>
+    <span class="section-total">$1,000.00</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly" selected="">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-transport">🚗</div>
+    <h2>Transportation</h2>
+    <span class="section-total">$1,085.05</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-wellness">💪</div>
+    <h2>Wellness</h2>
+    <span class="section-total">$100.00</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-personal">🛍️</div>
+    <h2>Personal</h2>
+    <span class="section-total">$0.00</span></div><div class="section-body"><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-insurance">🛡️</div>
+    <h2>Insurance</h2>
+    <span class="section-total">$95.00</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-family">👨‍👩‍👧</div>
+    <h2>Family</h2>
+    <span class="section-total">$0.00</span></div><div class="section-body"><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-home">🔧</div>
+    <h2>Home</h2>
+    <span class="section-total">$200.00</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-subscriptions">📱</div>
+    <h2>Subscriptions</h2>
+    <span class="section-total">$138.01</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-loans">💳</div>
+    <h2>Loans</h2>
+    <span class="section-total">$1,171.20</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card"><div class="section-header">
+    <div class="s-icon ic-other">📦</div>
+    <h2>Other</h2>
+    <span class="section-total">$5,084.12</span></div><div class="section-body"><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><div class="budget-row"><input class="row-label" type="text" placeholder="Description"><input class="row-amount" type="number" step="0.01" min="0" placeholder="0.00"><select class="recurrence-select" title="How often this item repeats"><option value="one-time" selected="">One-Time</option><option value="weekly">Weekly</option><option value="biweekly">Biweekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select><button class="del-btn" title="Remove row">×</button></div><button class="add-row-btn">＋ Add row</button></div></div><div class="section-card full-width"><div class="section-header">
+    <div class="s-icon ic-bills">📋</div>
+    <h2>Bills Tracker</h2>
+    <span class="section-total">$0.00</span></div><div class="bills-form"><input type="text" placeholder="Bill name (e.g. Netflix)"><select><option value="">— Category —</option><option value="savings">Savings</option><option value="housing">Housing</option><option value="utilities">Utilities</option><option value="food">Food</option><option value="transportation">Transportation</option><option value="wellness">Wellness</option><option value="personal">Personal</option><option value="insurance">Insurance</option><option value="family">Family</option><option value="home">Home</option><option value="subscriptions">Subscriptions</option><option value="loans">Loans</option><option value="other">Other</option></select><input type="number" step="0.01" min="0" placeholder="0.00"><button class="bills-add-btn">Add Bill</button></div><div id="bills-list-head"><span>Bill Name</span><span>Category</span><span style="text-align:right">Amount</span><span></span></div><div id="bills-scroll"><div class="empty-bills">No bills added yet. Use the form above to track recurring bills.</div></div><div class="bills-total-row"><span>Total Bills</span><span class="btotal">$0.00</span></div></div></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA MODEL
+// ══════════════════════════════════════════════
+const MONTHS = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+
+const CATEGORIES = [
+  { id:'income',        label:'Income',        icon:'💵', iconCls:'ic-income',        isIncome:true  },
+  { id:'savings',       label:'Savings',       icon:'🏦', iconCls:'ic-savings'                       },
+  { id:'housing',       label:'Housing',       icon:'🏠', iconCls:'ic-housing'                       },
+  { id:'utilities',     label:'Utilities',     icon:'⚡', iconCls:'ic-utilities'                     },
+  { id:'food',          label:'Food',          icon:'🍽️', iconCls:'ic-food'                          },
+  { id:'transportation',label:'Transportation',icon:'🚗', iconCls:'ic-transport'                     },
+  { id:'wellness',      label:'Wellness',      icon:'💪', iconCls:'ic-wellness'                      },
+  { id:'personal',      label:'Personal',      icon:'🛍️', iconCls:'ic-personal'                     },
+  { id:'insurance',     label:'Insurance',     icon:'🛡️', iconCls:'ic-insurance'                    },
+  { id:'family',        label:'Family',        icon:'👨‍👩‍👧', iconCls:'ic-family'                   },
+  { id:'home',          label:'Home',          icon:'🔧', iconCls:'ic-home'                          },
+  { id:'subscriptions', label:'Subscriptions', icon:'📱', iconCls:'ic-subscriptions'                 },
+  { id:'loans',         label:'Loans',         icon:'💳', iconCls:'ic-loans'                         },
+  { id:'other',         label:'Other',         icon:'📦', iconCls:'ic-other'                         },
+];
+
+const DEFAULT_ROWS = {
+  income:         [['Paycheck 1',''],['Paycheck 2',''],['Additional Income','']],
+  savings:        [['Emergency Fund',''],['Retirement (401k/IRA)',''],['Other Savings','']],
+  housing:        [['Rent / Mortgage',''],['HOA Fees',''],["Renter's / Home Insurance",'']],
+  utilities:      [['Electric & Gas',''],['Water & Sewer',''],['Cell Phone',''],['Internet','']],
+  food:           [['Groceries',''],['Restaurants','']],
+  transportation: [['Car Insurance',''],['Gas',''],['Car Payment',''],['Maintenance',''],['Bus / Train','']],
+  wellness:       [['Gym Membership',''],['Medications',''],['Vitamins / Supplements',''],['Medical / Dental','']],
+  personal:       [['Clothing',''],['Haircuts / Grooming',''],['Fun Money','']],
+  insurance:      [['Health Insurance',''],['Life Insurance',''],['Disability Insurance','']],
+  family:         [['Childcare',''],['Education',''],['Gifts',''],['Charitable Donations','']],
+  home:           [['Repairs / Maintenance',''],['Furniture',''],['Supplies','']],
+  subscriptions:  [['Streaming (Netflix/Hulu)',''],['Music',''],['Cloud Storage',''],['Gaming','']],
+  loans:          [['Car Loan',''],['Credit Card',''],['Personal Loan',''],['Student Loan','']],
+  other:          [['Miscellaneous',''],['Date Night',''],['Christmas / Holidays','']],
+};
+
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
+
+// ── Storage helpers ──
+function storageKey(year, month) { return `budget_v2_${year}_${month}`; }
+function billsKey(year, month) { return `bills_v2_${year}_${month}`; }
+
+function loadMonthData(year, month) {
+  try {
+    const raw = localStorage.getItem(storageKey(year, month));
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  // Default empty
+  const data = {};
+  CATEGORIES.forEach(cat => { data[cat.id] = DEFAULT_ROWS[cat.id].map(r => ({label:r[0], amount:r[1]})); });
+  return data;
+}
+
+function saveMonthData(year, month, data) {
+  try { localStorage.setItem(storageKey(year, month), JSON.stringify(data)); } catch(e) {}
+}
+
+function loadBills(year, month) {
+  try {
+    const raw = localStorage.getItem(billsKey(year, month));
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return [];
+}
+
+function saveBills(year, month, bills) {
+  try { localStorage.setItem(billsKey(year, month), JSON.stringify(bills)); } catch(e) {}
+}
+
+// ── Format helpers ──
+function fmt(n) {
+  if (isNaN(n) || n === '' || n === null) n = 0;
+  return '$' + parseFloat(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function pct(n) {
+  if (isNaN(n)) return '0%';
+  return (n * 100).toFixed(1) + '%';
+}
+function parseAmt(v) {
+  const n = parseFloat(String(v).replace(/[$,]/g,''));
+  return isNaN(n) ? 0 : n;
+}
+
+// ══════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════
+function render() {
+  const data  = loadMonthData(currentYear, currentMonth);
+  const bills = loadBills(currentYear, currentMonth);
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  // Income section (full width)
+  grid.appendChild(buildIncomeCard(data));
+
+  // Other budget sections
+  const spend = CATEGORIES.filter(c => !c.isIncome);
+  spend.forEach(cat => grid.appendChild(buildSectionCard(cat, data)));
+
+  // Bills section (full width)
+  grid.appendChild(buildBillsCard(bills, data));
+
+  updateSummary(data, bills);
+}
+
+// ── Income Card ──
+function buildIncomeCard(data) {
+  const cat = CATEGORIES[0];
+  const rows = data['income'] || [];
+
+  const card = document.createElement('div');
+  card.className = 'section-card full-width';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'section-header';
+  hdr.innerHTML = `
+    <div class="s-icon ${cat.iconCls}">${cat.icon}</div>
+    <h2>${cat.label}</h2>
+    <span class="section-total" id="tot-income"></span>`;
+  card.appendChild(hdr);
+
+  const body = document.createElement('div');
+  body.className = 'section-body';
+
+  rows.forEach((row, i) => {
+    body.appendChild(buildRow('income', i, row.label, row.amount, data));
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-row-btn';
+  addBtn.innerHTML = '＋ Add row';
+  addBtn.onclick = () => {
+    const d = loadMonthData(currentYear, currentMonth);
+    d['income'].push({label:'', amount:''});
+    saveMonthData(currentYear, currentMonth, d);
+    render();
+  };
+  body.appendChild(addBtn);
+
+  // Income total row
+  const totRow = document.createElement('div');
+  totRow.className = 'income-total-row';
+  const total = rows.reduce((s, r) => s + parseAmt(r.amount), 0);
+  totRow.innerHTML = `<span>Total Monthly Income</span><span class="itotal">${fmt(total)}</span>`;
+  body.appendChild(totRow);
+
+  card.appendChild(body);
+
+  // set header total
+  requestAnimationFrame(() => {
+    const el = card.querySelector('#tot-income');
+    if (el) el.textContent = fmt(total);
+  });
+
+  return card;
+}
+
+// ── Generic Section Card ──
+function buildSectionCard(cat, data) {
+  const rows = data[cat.id] || [];
+
+  const card = document.createElement('div');
+  card.className = 'section-card';
+
+  const total = rows.reduce((s,r) => s + parseAmt(r.amount), 0);
+
+  const hdr = document.createElement('div');
+  hdr.className = 'section-header';
+  hdr.innerHTML = `
+    <div class="s-icon ${cat.iconCls}">${cat.icon}</div>
+    <h2>${cat.label}</h2>
+    <span class="section-total">${fmt(total)}</span>`;
+  card.appendChild(hdr);
+
+  const body = document.createElement('div');
+  body.className = 'section-body';
+
+  rows.forEach((row, i) => {
+    body.appendChild(buildRow(cat.id, i, row.label, row.amount, data));
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-row-btn';
+  addBtn.innerHTML = '＋ Add row';
+  addBtn.onclick = () => {
+    const d = loadMonthData(currentYear, currentMonth);
+    if (!d[cat.id]) d[cat.id] = [];
+    d[cat.id].push({label:'', amount:''});
+    saveMonthData(currentYear, currentMonth, d);
+    render();
+  };
+  body.appendChild(addBtn);
+
+  card.appendChild(body);
+  return card;
+}
+
+// ── Row Builder ──
+function buildRow(catId, idx, label, amount, data) {
+  const row = document.createElement('div');
+  row.className = 'budget-row';
+
+  const labelIn = document.createElement('input');
+  labelIn.className = 'row-label';
+  labelIn.type = 'text';
+  labelIn.placeholder = 'Description';
+  labelIn.value = label;
+  labelIn.addEventListener('change', () => {
+    const d = loadMonthData(currentYear, currentMonth);
+    if (d[catId] && d[catId][idx]) d[catId][idx].label = labelIn.value;
+    saveMonthData(currentYear, currentMonth, d);
+  });
+
+  const amtIn = document.createElement('input');
+  amtIn.className = 'row-amount';
+  amtIn.type = 'number';
+  amtIn.step = '0.01';
+  amtIn.min = '0';
+  amtIn.placeholder = '0.00';
+  amtIn.value = amount;
+  amtIn.addEventListener('input', () => {
+    const d = loadMonthData(currentYear, currentMonth);
+    if (d[catId] && d[catId][idx]) d[catId][idx].amount = amtIn.value;
+    saveMonthData(currentYear, currentMonth, d);
+    // Partial re-calc without full re-render for performance
+    recalcTotals(d);
+  });
+  amtIn.addEventListener('change', () => {
+    const d = loadMonthData(currentYear, currentMonth);
+    if (d[catId] && d[catId][idx]) d[catId][idx].amount = amtIn.value;
+    saveMonthData(currentYear, currentMonth, d);
+    recalcTotals(d);
+  });
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'del-btn';
+  delBtn.innerHTML = '×';
+  delBtn.title = 'Remove row';
+  delBtn.onclick = () => {
+    const d = loadMonthData(currentYear, currentMonth);
+    if (d[catId]) d[catId].splice(idx, 1);
+    saveMonthData(currentYear, currentMonth, d);
+    render();
+  };
+
+  row.appendChild(labelIn);
+  row.appendChild(amtIn);
+  row.appendChild(delBtn);
+  return row;
+}
+
+// ── Bills Card ──
+function buildBillsCard(bills, data) {
+  const card = document.createElement('div');
+  card.className = 'section-card full-width';
+
+  const hdr = document.createElement('div');
+  hdr.className = 'section-header';
+  const billsTotal = bills.reduce((s,b) => s + parseAmt(b.amount), 0);
+  hdr.innerHTML = `
+    <div class="s-icon ic-bills">📋</div>
+    <h2>Bills Tracker</h2>
+    <span class="section-total">${fmt(billsTotal)}</span>`;
+  card.appendChild(hdr);
+
+  // Add form
+  const form = document.createElement('div');
+  form.className = 'bills-form';
+
+  const nameIn = document.createElement('input');
+  nameIn.type = 'text';
+  nameIn.placeholder = 'Bill name (e.g. Netflix)';
+
+  const catSel = document.createElement('select');
+  catSel.innerHTML = `<option value="">— Category —</option>` +
+    CATEGORIES.filter(c=>!c.isIncome).map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+
+  const amtIn = document.createElement('input');
+  amtIn.type = 'number';
+  amtIn.step = '0.01';
+  amtIn.min = '0';
+  amtIn.placeholder = '0.00';
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'bills-add-btn';
+  addBtn.textContent = 'Add Bill';
+  addBtn.onclick = () => {
+    const name = nameIn.value.trim();
+    const cat  = catSel.value;
+    const amt  = amtIn.value;
+    if (!name || !amt) return;
+    const b = loadBills(currentYear, currentMonth);
+    b.push({name, cat, amount: amt});
+    saveBills(currentYear, currentMonth, b);
+    render();
+  };
+
+  form.appendChild(nameIn);
+  form.appendChild(catSel);
+  form.appendChild(amtIn);
+  form.appendChild(addBtn);
+  card.appendChild(form);
+
+  // List header
+  const listHead = document.createElement('div');
+  listHead.id = 'bills-list-head';
+  listHead.innerHTML = `<span>Bill Name</span><span>Category</span><span style="text-align:right">Amount</span><span></span>`;
+  card.appendChild(listHead);
+
+  // Scrollable list
+  const scroll = document.createElement('div');
+  scroll.id = 'bills-scroll';
+
+  if (bills.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-bills';
+    empty.textContent = 'No bills added yet. Use the form above to track recurring bills.';
+    scroll.appendChild(empty);
+  } else {
+    bills.forEach((bill, i) => {
+      const row = document.createElement('div');
+      row.className = 'bill-row';
+      const catLabel = CATEGORIES.find(c=>c.id===bill.cat)?.label || bill.cat || '—';
+      row.innerHTML = `
+        <span>${bill.name || '—'}</span>
+        <span><span class="bill-cat-badge">${catLabel}</span></span>
+        <span class="bill-amount">${fmt(bill.amount)}</span>
+        <button class="del-btn" title="Remove">×</button>`;
+      row.querySelector('.del-btn').onclick = () => {
+        const b = loadBills(currentYear, currentMonth);
+        b.splice(i, 1);
+        saveBills(currentYear, currentMonth, b);
+        render();
+      };
+      scroll.appendChild(row);
+    });
+  }
+
+  card.appendChild(scroll);
+
+  // Bills total
+  const totRow = document.createElement('div');
+  totRow.className = 'bills-total-row';
+  totRow.innerHTML = `<span>Total Bills</span><span class="btotal">${fmt(billsTotal)}</span>`;
+  card.appendChild(totRow);
+
+  return card;
+}
+
+// ── Recalc totals without full re-render ──
+function recalcTotals(data) {
+  const bills = loadBills(currentYear, currentMonth);
+
+  // Update section header totals
+  CATEGORIES.forEach(cat => {
+    const rows = data[cat.id] || [];
+    const total = rows.reduce((s,r) => s + parseAmt(r.amount), 0);
+
+    // find the section header total span for this cat
+    const hdrs = document.querySelectorAll('.section-header');
+    hdrs.forEach(hdr => {
+      const h2 = hdr.querySelector('h2');
+      if (h2 && h2.textContent === cat.label) {
+        const totSpan = hdr.querySelector('.section-total');
+        if (totSpan) totSpan.textContent = fmt(total);
+      }
+    });
+
+    // income total row
+    if (cat.id === 'income') {
+      const iRow = document.querySelector('.income-total-row .itotal');
+      if (iRow) iRow.textContent = fmt(total);
+      const incomeHdr = document.getElementById('tot-income');
+      if (incomeHdr) incomeHdr.textContent = fmt(total);
+    }
+  });
+
+  updateSummary(data, bills);
+}
+
+// ── Summary ──
+function updateSummary(data, bills) {
+  const incomeTotal = (data['income'] || []).reduce((s,r) => s + parseAmt(r.amount), 0);
+
+  let expensesTotal = 0;
+  CATEGORIES.filter(c => !c.isIncome).forEach(cat => {
+    expensesTotal += (data[cat.id] || []).reduce((s,r) => s + parseAmt(r.amount), 0);
+  });
+
+  const savingsTotal = (data['savings'] || []).reduce((s,r) => s + parseAmt(r.amount), 0);
+  const remaining = incomeTotal - expensesTotal;
+  const savingsRate = incomeTotal > 0 ? savingsTotal / incomeTotal : 0;
+
+  document.getElementById('s-income').textContent    = fmt(incomeTotal);
+  document.getElementById('s-expenses').textContent  = fmt(expensesTotal);
+  document.getElementById('s-remaining').textContent = fmt(remaining);
+  document.getElementById('s-rate').textContent      = pct(savingsRate);
+
+  const remEl = document.getElementById('s-remaining');
+  remEl.classList.remove('remaining-positive','remaining-negative');
+  remEl.classList.add(remaining >= 0 ? 'remaining-positive' : 'remaining-negative');
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function setYear(y) {
+  currentYear = y;
+  document.getElementById('yr-display').textContent = y;
+  render();
+}
+
+function setMonth(m) {
+  currentMonth = m;
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === m);
+  });
+  render();
+}
+
+document.getElementById('yr-prev').onclick = () => setYear(currentYear - 1);
+document.getElementById('yr-next').onclick = () => setYear(currentYear + 1);
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.onclick = () => setMonth(parseInt(btn.dataset.month));
+});
+
+document.getElementById('new-month-btn').onclick = () => {
+  const mName = MONTHS[currentMonth];
+  if (!confirm(`Reset ${mName} ${currentYear}? This will clear all data for this month only. Other months are unaffected.`)) return;
+  const fresh = {};
+  CATEGORIES.forEach(cat => { fresh[cat.id] = DEFAULT_ROWS[cat.id].map(r => ({label:r[0], amount:''})); });
+  saveMonthData(currentYear, currentMonth, fresh);
+  saveBills(currentYear, currentMonth, []);
+  render();
+};
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+document.getElementById('yr-display').textContent = currentYear;
+document.querySelectorAll('.tab-btn')[currentMonth].classList.add('active');
+document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+document.querySelectorAll('.tab-btn')[currentMonth].classList.add('active');
+render();
+</script>
+<script>
+/* Added save manager and recurrence controls — the original planner layout is unchanged. */
+(function () {
+  const RECUR = ['one-time','weekly','biweekly','monthly','quarterly','yearly'];
+  const fmtName = v => v.replace(/(^|-)\w/g, x => x.toUpperCase());
+  const oldBuildRow = buildRow;
+  buildRow = function(catId, idx, label, amount, data) {
+    const row = oldBuildRow(catId, idx, label, amount, data);
+    const recurrence = document.createElement('select');
+    recurrence.className = 'recurrence-select';
+    const value = (data[catId] && data[catId][idx] && data[catId][idx].recurrence) || 'one-time';
+    recurrence.innerHTML = RECUR.map(v => `<option value="${v}" ${v===value?'selected':''}>${fmtName(v)}</option>`).join('');
+    recurrence.title = 'How often this item repeats';
+    recurrence.onchange = () => {
+      const d = loadMonthData(currentYear, currentMonth);
+      if (d[catId] && d[catId][idx]) d[catId][idx].recurrence = recurrence.value;
+      saveMonthData(currentYear, currentMonth, d);
+    };
+    row.insertBefore(recurrence, row.lastChild);
+    return row;
+  };
+
+  function enhanceBillControls() {
+    const bills = loadBills(currentYear, currentMonth);
+    document.querySelectorAll('#bills-scroll .bill-row').forEach((row, i) => {
+      if (row.querySelector('.recurrence-select')) return;
+      const select = document.createElement('select');
+      select.className = 'recurrence-select';
+      const value = bills[i].recurrence || 'one-time';
+      select.innerHTML = RECUR.map(v => `<option value="${v}" ${v===value?'selected':''}>${fmtName(v)}</option>`).join('');
+      select.onchange = () => { const b = loadBills(currentYear,currentMonth); b[i].recurrence=select.value; saveBills(currentYear,currentMonth,b); };
+      row.insertBefore(select, row.lastChild);
+    });
+  }
+  const oldRender = render;
+  render = function() { oldRender(); enhanceBillControls(); };
+
+  const tools = document.createElement('div');
+  tools.id = 'save-tools';
+  tools.innerHTML = `<span>✓ Auto-saved locally</span><button id="manual-save">Save now</button><button id="export-data">Export data</button><button id="import-data">Import data</button><input id="import-file" type="file" accept="application/json" hidden>`;
+  document.getElementById('tab-bar').insertAdjacentElement('afterend', tools);
+  document.getElementById('manual-save').onclick = () => { saveMonthData(currentYear,currentMonth,loadMonthData(currentYear,currentMonth)); saveBills(currentYear,currentMonth,loadBills(currentYear,currentMonth)); alert('Current month saved locally.'); };
+  document.getElementById('export-data').onclick = () => {
+    const saved = {}; for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('budget_v2_')||k.startsWith('bills_v2_')) saved[k]=JSON.parse(localStorage.getItem(k));}
+    const blob=new Blob([JSON.stringify({app:'Monthly Budget Planner',version:1,exportedAt:new Date().toISOString(),data:saved},null,2)],{type:'application/json'}),a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download=`monthly-budget-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href);
+  };
+  document.getElementById('import-data').onclick = () => document.getElementById('import-file').click();
+  document.getElementById('import-file').onchange = e => { const file=e.target.files[0]; if(!file)return; const reader=new FileReader(); reader.onload=()=>{try{const parsed=JSON.parse(reader.result),records=parsed.data||parsed;if(!Object.keys(records).some(k=>k.startsWith('budget_v2_')||k.startsWith('bills_v2_')))throw Error();if(confirm('Import this backup and replace matching saved months?')){Object.entries(records).forEach(([k,v])=>{if(k.startsWith('budget_v2_')||k.startsWith('bills_v2_'))localStorage.setItem(k,JSON.stringify(v));});render();alert('Backup imported.');}}catch{alert('Please choose a Monthly Budget Planner JSON backup.');}};reader.readAsText(file); e.target.value=''; };
+  render();
+})();
+</script>
+<style>
+#save-tools{max-width:1200px;margin:0 auto 14px;padding:0 24px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#4b5563;font-size:12px;font-weight:600}#save-tools button{border:1px solid #b8bfcc;background:#fff;color:#1341b0;border-radius:6px;padding:6px 10px;cursor:pointer;font:inherit;font-weight:700}#save-tools button:hover{background:#e8eefb}.recurrence-select{border:1px solid #dde1e9;border-radius:5px;background:#fff;color:#4b5563;padding:5px;font:inherit;font-size:11px;max-width:102px}.budget-row{grid-template-columns:minmax(0,1fr) 110px 102px 28px!important}@media(max-width:620px){#save-tools{padding:0 14px}.budget-row{grid-template-columns:1fr 92px 28px!important}.budget-row .recurrence-select{grid-column:1 / span 2;max-width:none}.bill-row .recurrence-select{max-width:82px}}
+</style>
+
+
+</body></html>
