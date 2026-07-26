@@ -698,7 +698,7 @@ body {
       <div class="sum-card expenses">
         <div class="s-label">Total Expenses</div>
         <div class="s-value" id="s-expenses">$0.00</div>
-        <div class="s-sub">Planned + tracker spent</div>
+        <div class="s-sub">Budget rows + logged tracker</div>
       </div>
       <div class="sum-card remaining">
         <div class="s-label">Remaining Balance</div>
@@ -1005,17 +1005,17 @@ function updateSummary(data, spending) {
   const income   = (data['income'] ||[]).reduce((s,r)=>s+parseAmt(r.amount),0);
   const savings  = (data['savings']||[]).reduce((s,r)=>s+parseAmt(r.amount),0);
   
-  // Total budgeted allocated across all expense categories
+  // Total Budgeted Expenses from category rows
   const budgeted = ALL_EXPENSE_CATS.reduce((s, cat) => {
     return s + (data[cat.id]||[]).reduce((sub, r) => sub + parseAmt(r.amount), 0);
   }, 0);
 
-  // Total tracker logged spending
+  // Tracker Total
   const trackerSpent = spending.reduce((s,e)=>s+parseAmt(e.amount),0);
 
-  // Total Expenses = Total Budgeted Line Items + Daily Tracker Spent
+  // Total Expenses combines budgeted entries + additional daily tracker entries
   const totalExpenses = budgeted + trackerSpent;
-  const remain        = income - totalExpenses;
+  const remain = income - totalExpenses;
 
   document.getElementById('s-income').textContent    = fmt(income);
   document.getElementById('s-budgeted').textContent  = fmt(budgeted);
